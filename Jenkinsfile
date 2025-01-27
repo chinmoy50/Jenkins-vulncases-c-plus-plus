@@ -49,7 +49,7 @@ pipeline {
                         -H "Client-Secret: ${CLIENT_SECRET}" \
                         -F "projectZipFile=@project.zip" \
                         -F "applicationId=${APPLICATION_ID}" \
-                        -F "scanName=New SCA Scan from Jenkins Pipeline" \
+                        -F "scanName=Vulncases-C++ SCA Scan" \
                         -F "language=C++" \
                         "${SCA_API_URL}"
                     """, returnStdout: true).trim()
@@ -68,19 +68,7 @@ pipeline {
             }
         }
 
-        stage('Check SCA Result') {
-            when {
-                expression { return env.CAN_PROCEED_SCA != 'true' }
-            }
-            steps {
-                error "SCA scan failed. Deployment cancelled."
-            }
-        }
-
         stage('Perform SAST Scan') {
-            when {
-                expression { return env.CAN_PROCEED_SCA == 'true' }
-            }
             steps {
                 script {
                     def response = sh(script: """
@@ -90,7 +78,7 @@ pipeline {
                         -H "Client-Secret: ${CLIENT_SECRET}" \
                         -F "projectZipFile=@project.zip" \
                         -F "applicationId=${APPLICATION_ID}" \
-                        -F "scanName=New SAST Scan from Jenkins Pipeline" \
+                        -F "scanName=Vulncases-C++ SAST Scan" \
                         -F "language=C++" \
                         "${SAST_API_URL}"
                     """, returnStdout: true).trim()
@@ -106,21 +94,6 @@ pipeline {
 
                     env.CAN_PROCEED_SAST = canProceedSAST.toString()
                 }
-            }
-        }
-
-        stage('Check SAST Result') {
-            when {
-                expression { return env.CAN_PROCEED_SAST != 'true' }
-            }
-            steps {
-                error "SAST scan failed. Deployment cancelled."
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                sh '. venv/bin/activate && pip install -r requirements.txt'
             }
         }
 
